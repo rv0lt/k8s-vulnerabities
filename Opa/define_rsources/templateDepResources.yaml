@@ -1,0 +1,44 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: defineresources
+spec:
+  crd:
+    spec:
+      names:
+        kind: DefineResources
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package defineresources
+
+        violation[{"msg": msg, "details": {}}] {
+            c := input_containers[_]
+            not c.resources.limits.cpu
+          	msg := "Define resource limits for cpu"
+        }
+
+        violation[{"msg": msg, "details": {}}] {
+            c := input_containers[_]
+            not c.resources.limits.memory
+          	msg := "Define resource limits for memory"
+        }
+
+        violation[{"msg": msg, "details": {}}] {
+            c := input_containers[_]
+            not c.resources.requests.cpu
+          	msg := "Define resource requests for cpu"
+        }
+  
+        violation[{"msg": msg, "details": {}}] {
+            c := input_containers[_]
+            not c.resources.requests.memory
+          	msg := "Define resource requests for memory"
+        }
+
+        input_containers[c] {
+            c := input.review.object.spec.template.spec.containers[_]
+        }
+        input_containers[c] {
+            c := input.review.object.spec.template.spec.initContainers[_]
+        }

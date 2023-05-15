@@ -1,0 +1,44 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: securedeployment
+spec:
+  crd:
+    spec:
+      names:
+        kind: SecureDeployment
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package secdeployment
+
+        violation[{"msg": msg, "details": {}}] {
+            c := input_containers[_]
+            c.securityContext.privileged
+            msg := sprintf("Privileged container is not allowed: %v, securityContext: %v", [c.name, c.securityContext])
+        }
+
+        violation[{"msg": msg, "details": {}}] {
+            c := input_containers[_]
+            not c.securityContext.runAsNonRoot
+            msg := sprintf("Root container is not allowed: %v, securityContext: %v", [c.name, c.securityContext])
+        }
+
+        violation[{"msg": msg, "details": {}}] {
+            c := input_containers[_]
+            not c.securityContext.readOnlyRootFilesystem
+            msg := sprintf("Not read-only root filesystem container is not allowed: %v, securityContext: %v", [c.name, c.securityContext])
+        }
+
+        violation[{"msg": msg, "details": {}}] {
+            c := input_containers[_]
+            c.securityContext.allowPrivilegeEscalation
+            msg := sprintf("Privilege escalation container is not allowed: %v, securityContext: %v", [c.name, c.securityContext])
+        }
+
+        input_containers[c] {
+            c := input.review.object.spec.template.spec.containers[_]
+        }
+        input_containers[c] {
+            c := input.review.object.spec.template.spec.initContainers[_]
+        }

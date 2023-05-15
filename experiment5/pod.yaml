@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shell
+  labels:
+    app: shell    
+spec:
+  containers:
+  - name: shell1
+    image: busybox
+    resources:
+      limits:
+        memory: "800Mi"
+        cpu: "800m"
+      requests:
+        memory: "600Mi"
+        cpu: "400m"
+    command:
+    - sleep
+    args:
+    - "999999"

@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jup
+  labels:
+    app: jup
+spec:
+  ports:
+    - port: 8888
+      targetPort: 8888
+  selector:
+    app: jup
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jup
+  labels:
+    app: jup
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jup
+  template:
+    metadata:
+      labels:
+        app: jup
+    spec:
+      #automountServiceAccountToken: false
+      containers:
+        - name: jupyter
+          image: jupyter/base-notebook
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8888
+          resources:
+            requests:
+              cpu: 100m

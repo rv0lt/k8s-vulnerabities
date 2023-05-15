@@ -1,0 +1,36 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: latesttag
+spec:
+  crd:
+    spec:
+      names:
+        kind: LatestTag
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package defineresources
+
+        # check for either reg/image:latest or reg/image
+
+        violation[{"msg": msg, "details": {}}] {
+            c := input_containers[_]
+            image = c.image
+            contains(image, "latest")
+          	msg := "Do not use latest tag"
+        }
+
+        violation[{"msg": msg, "details": {}}] {
+            c := input_containers[_]
+            image = c.image
+            not contains(image, ":")
+          	msg := "Do not use latest tag"
+        }
+
+        input_containers[c] {
+            c := input.review.object.spec.template.spec.containers[_]
+        }
+        input_containers[c] {
+            c := input.review.object.spec.template.spec.initContainers[_]
+        }
